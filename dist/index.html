@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pokémon Search</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #111;
+            color: #fff;
+            text-align: center;
+            padding: 20px;
+            margin: 0;
+        }
+    
+        h1 {
+            color: #f05030; /* Orange */
+            font-size: 36px;
+            margin-bottom: 30px;
+        }
+    
+        #pokemon-search {
+            position: relative; /* Make the search bar position relative */
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+    
+        #pokemon-name-input {
+            padding: 10px;
+            font-size: 16px;
+            border: 2px solid #f05030; /* Orange */
+            border-radius: 4px;
+            width: 250px;
+            color: #fff;
+            background-color: #333;
+            outline: none;
+            transition: border-color 0.3s ease;
+            margin-right: 10px;
+        }
+    
+        #pokemon-name-input::placeholder {
+            color: #888;
+        }
+    
+        #pokemon-name-input:focus {
+            border-color: #e04020; /* Darker shade of Orange */
+        }
+    
+        .autocomplete-items {
+            position: absolute;
+            background-color: #333; /* Dark background for autocomplete */
+            color: #fff;
+            border: 1px solid #f05030; /* Orange border */
+            border-top: none;
+            z-index: 99;
+            width: 250px; /* Adjust width as needed */
+            max-height: 200px; /* Limit height of autocomplete dropdown */
+            overflow-y: auto; /* Enable scrolling if needed */
+            border-bottom-left-radius: 4px;
+            border-bottom-right-radius: 4px;
+            display: none; /* Initially hide autocomplete dropdown */
+            left: 0; /* Adjust for slight right shift */
+            margin-top: 5px; /* Adjust margin to align with input */
+            top: calc(100% + 5px); /* Position just below the input */
+        }
+
+    
+        .autocomplete-item {
+            padding: 10px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+    
+        .autocomplete-item:hover {
+            background-color: #444; /* Darker shade on hover */
+        }
+    
+        #search-button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #f05030; /* Orange */
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            outline: none;
+            transition: background-color 0.3s ease;
+        }
+    
+        #search-button:hover {
+            background-color: #e04020; /* Darker shade of Orange */
+        }
+    
+        .pokemon-card {
+            background-color: #222; /* Dark Black */
+            color: #fff;
+            padding: 40px;
+            border-radius: 12px;
+            margin-top: 30px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+            width: 80%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            text-align: left;
+            display: none; /* Hide pokemon details card initially */
+        }
+    
+        .pokemon-details {
+            width: 70%; /* Adjust left column width as needed */
+            text-align: left;
+            padding-right: 30px; /* Add padding for spacing */
+        }
+    
+        .pokemon-details h2 {
+            font-size: 36px;
+            margin-top: 0;
+            font-weight: bold; /* Make heading bold */
+            color: #f05030; /* Orange */
+        }
+    
+        .pokemon-details p {
+            font-size: 18px;
+            margin: 12px 0;
+            line-height: 1.5; /* Ensure consistent line height */
+        }
+    
+        .pokemon-details .pokemon-description {
+            font-style: italic;
+            font-size: 16px;
+            color: #ccc;
+        }
+    
+        .pokemon-image {
+            width: 250px; /* Adjust image width */
+            height: auto; /* Maintain aspect ratio */
+            border-radius: 8px;
+            float: right; /* Float image to the right */
+            margin-left: 30px; /* Add margin for spacing */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2), /* Add subtle shadow */
+                        0 12px 20px rgba(0, 0, 0, 0.3); /* Add 3D disk-like bottom shadow */
+        }
+    </style>
+</head>
+<body>
+    <h1>Pokémon Search</h1>
+    <div id="pokemon-search" class="autocomplete">
+        <input type="text" id="pokemon-name-input" placeholder="Enter Pokémon name" oninput="handleAutocomplete(event)">
+        <div class="autocomplete-items" id="autocomplete-items"></div>
+        <button id="search-button" onclick="searchPokemon()">Search</button>
+    </div>
+
+    <div id="pokemon-details" class="pokemon-card">
+        <div class="pokemon-details">
+            <h2 id="pokemon-name"></h2>
+            <p id="pokemon-id"></p>
+            <p id="pokemon-height"></p>
+            <p id="pokemon-weight"></p>
+            <p id="pokemon-types"></p>
+            <p id="pokemon-description" class="pokemon-description"></p>
+        </div>
+        <img id="pokemon-image" src="" alt="Pokemon Image" class="pokemon-image">
+    </div>
+
+    <script>
+        // Pokémon names array (You may fetch this dynamically if needed)
+        const pokemonNames = [
+            "bulbasaur", "ivysaur", "venusaur", "charmander", "charmeleon", "charizard", "squirtle", "wartortle", "blastoise", "caterpie", "metapod", "butterfree", "weedle", "kakuna", "beedrill", "pidgey", "pidgeotto", "pidgeot", "rattata", "raticate", "spearow", "fearow", "ekans", "arbok", "pikachu", "raichu", "sandshrew", "sandslash", "nidoran", "nidorina", "nidoqueen", "nidoran", "nidorino", "nidoking", "clefairy", "clefable", "vulpix", "ninetales", "jigglypuff", "wigglytuff", "zubat", "golbat", "oddish", "gloom", "vileplume", "paras", "parasect", "venonat", "venomoth", "diglett", "dugtrio", "meowth", "persian", "psyduck", "golduck", "mankey", "primeape", "growlithe", "arcanine", "poliwag", "poliwhirl", "poliwrath", "abra", "kadabra", "alakazam", "machop", "machoke", "machamp", "bellsprout", "weepinbell", "victreebel", "tentacool", "tentacruel", "geodude", "graveler", "golem", "ponyta", "rapidash", "slowpoke", "slowbro", "magnemite", "magneton", "farfetchd", "doduo", "dodrio", "seel", "dewgong", "grimer", "muk", "shellder", "cloyster", "gastly", "haunter", "gengar", "onix", "drowzee", "hypno", "krabby", "kingler", "voltorb", "electrode", "exeggcute", "exeggutor", "cubone", "marowak", "hitmonlee", "hitmonchan", "lickitung", "koffing", "weezing", "rhyhorn", "rhydon", "chansey", "tangela", "kangaskhan", "horsea", "seadra", "goldeen", "seaking", "staryu", "starmie", "mr.mime", "scyther", "jynx", "electabuzz", "magmar", "pinsir", "tauros", "magikarp", "gyarados", "lapras", "ditto", "eevee", "vaporeon", "jolteon", "flareon", "porygon", "omanyte", "omastar", "kabuto", "kabutops", "aerodactyl", "snorlax", "articuno", "zapdos", "moltres", "dratini", "dragonair", "dragonite", "mewtwo", "mew", "chikorita", "bayleef", "meganium", "cyndaquil", "quilava", "typhlosion", "totodile", "croconaw", "feraligatr", "sentret", "furret", "hoothoot", "noctowl", "ledyba", "ledian", "spinarak", "ariados", "crobat", "chinchou", "lanturn", "pichu", "cleffa", "igglybuff", "togepi", "togetic", "natu", "xatu", "mareep", "flaaffy", "ampharos", "bellossom", "marill", "azumarill", "sudowoodo", "politoed", "hoppip", "skiploom", "jumpluff", "aipom", "sunkern", "sunflora", "yanma", "wooper", "quagsire", "espeon", "umbreon", "murkrow", "slowking", "misdreavus", "unown", "wobbuffet", "girafarig", "pineco", "forretress", "dunsparce", "gligar", "shuckle", "steelix", "snubbull", "granbull", "qwilfish", "scizor", "shedinja", "whismur", "loudred", "exploud", "makuhita", "hariyama", "azelf", "sableye", "mawile", "aron", "lairon", "aggron", "meditite", "medicham", "electrike", "manectric", "plusle", "minun", "volbeat", "illumise", "roselia", "gulpin", "swalot", "arceus", "dialga", "palkia", "heatran", "regigigas", "giratina", "cresselia", "phione", "manaphy", "darkrai", "shaymin", "arceus", "victini", "snivy", "servine", "serperior", "tepig", "pignite", "emboar", "oshawott", "dewott", "samurott", "patrat", "watchog", "lillipup", "herdier", "stoutland", "purrloin", "liepard", "pansage", "simisage", "pansear", "simisear", "panpour", "simipour", "munna", "musharna", "pidove", "trio", "unfezant", "blitzle", "zebstrika", "roggenrola", "boldore", "gigalith", "woobat", "swoobat", "drilbur", "excadrill", "audino", "timburr", "gurdurr", "conkeldurr", "tympole", "palpitoad", "seismitoad", "throh", "sawk", "sewaddle", "swadloon", "leavanny", "venipede", "whirlipede", "scolipede", "cottonee", "whimsicott", "petilil", "lilligant", "basculin", "sandile", "krokorok", "krookodile", "darumaka", "darmanitan", "maractus", "dwebble", "crustle", "scraggy", "scrafty", "sigilyph", "yamask", "cofagrigus", "tirtouga", "carracosta", "archen", "archeops", "trubbish", "garbodor", "zorua", "zoroark", "minccino", "cinccino", "gothita", "gothorita", "gothitelle", "solosis", "duosion", "reuniclus", "ducklett", "swanna", "vanillite", "vanilluxe", "deerling", "sawsbuck", "emolga", "karrablast", "escavalier", "foongus", "amoonguss", "frillish", "jellicent", "alomomola", "joltik", "galvantula", "ferroseed", "ferrothorn", "klink", "klang", "klinklang", "tynamo", "eelektrik", "eelektruzz", "axew", "fraxure", "haxorus", "cubchoo", "beartic", "cryogonal", "shelmet", "accelgor", "petilil", "lilligant", "basculin", "sandile", "krokorok", "krookodile", "darumaka", "darmanitan", "maractus", "dwebble", "crustle", "scraggy", "scrafty", "sigilyph", "yamask", "cofagrigus", "tirtouga", "carracosta", "archen", "archeops", "trubbish", "garbodor", "zorua", "zoroark", "minccino", "cinccino", "gothita", "gothorita", "gothitelle", "solosis", "duosion", "reuniclus", "ducklett", "swanna", "vanillite", "vanilluxe", "deerling", "sawsbuck", "emolga", "karrablast", "escavalier", "foongus", "amoonguss", "frillish", "jellicent", "alomomola", "joltik", "galvantula", "ferroseed", "ferrothorn", "klink", "klang", "klinklang", "tynamo", "eelektrik", "eelektruzz", "axew", "fraxure", "haxorus", "cubchoo", "beartic", "cryogonal", "shelmet", "accelgor", "petilil", "lilligant", "basculin", "sandile", "krokorok", "krookodile", "darumaka", "darmanitan", "maractus", "dwebble", "crustle", "scraggy", "scrafty", "sigilyph", "yamask", "cofagrigus", "tirtouga", "carracosta", "archen", "archeops", "trubbish", "garbodor", "zorua", "zoroark", "minccino", "cinccino", "gothita", "gothorita", "gothitelle", "solosis", "duosion", "reuniclus", "ducklett", "swanna", "vanillite", "vanilluxe", "deerling", "sawsbuck", "emolga", "karrablast", "escavalier", "foongus", "amoonguss", "frillish", "jellicent", "alomomola", "joltik", "galvantula", "ferroseed", "ferrothorn", "klink", "klang", "klinklang", "tynamo", "eelektrik", "eelektruzz", "axew", "fraxure", "haxorus", "cubchoo", "beartic", "cryogonal", "shelmet", "accelgor", "petilil", "lilligant", "basculin", "sandile", "krokorok", "krookodile", "darumaka", "darmanitan", "maractus", "dwebble", "crustle", "scraggy", "scrafty", "sigilyph", "yamask", "cofagrigus", "tirtouga", "carracosta", "archen", "archeops", "trubbish", "garbodor", "zorua", "zoroark", "minccino", "cinccino", "gothita", "gothorita", "gothitelle", "solosis", "duosion", "reuniclus", "ducklett", "swanna", "vanillite", "vanilluxe", "deerling", "sawsbuck", "emolga", "karrablast", "escavalier", "foongus", "amoonguss", "frillish", "jellicent", "alomomola", "joltik", "galvantula", "ferroseed", "ferrothorn", "klink", "klang", "klinklang", "tynamo", "eelektrik", "eelektruzz", "axew", "fraxure", "haxorus", "cubchoo", "beartic", "cryogonal", "shelmet", "accelgor", "petilil", "lilligant", "basculin", "sandile", "krokorok", "krookodile", "darumaka", "darmanitan", "maractus", "dwebble", "crustle", "scraggy", "scrafty", "sigilyph", "yamask", "cofagrigus", "tirtouga", "carracosta", "archen", "archeops", "trubbish", "garbodor", "zorua", "zoroark", "minccino", "cinccino", "gothita", "gothorita", "gothitelle", "solosis", "duosion", "reuniclus", "ducklett", "swanna", "vanillite", "vanilluxe", "deerling", "sawsbuck", "emolga", "karrablast", "escavalier", "foongus", "amoonguss", "frillish", "jellicent", "alomomola", "joltik", "galvantula", "ferroseed", "ferrothorn", "klink", "klang", "klinklang", "tynamo", "eelektrik", "eelektruzz", "axew", "fraxure", "haxorus", "cubchoo", "beartic", "cryogonal", "shelmet", "accelgor", "petilil", "lilligant", "basculin", "sandile", "krokorok", "krookodile", "darumaka", "darmanitan", "maractus", "dwebble", "crustle", "scraggy", "scrafty", "sigilyph", "yamask", "cofagrigus", "tirtouga", "carracosta", "archen", "archeops", "trubbish", "garbodor", "zorua", "zoroark", "minccino", "cinccino", "gothita", "gothorita", "gothitelle", "solosis", "duosion", "reuniclus", "ducklett", "swanna", "vanillite", "vanilluxe", "deerling", "sawsbuck", "emolga", "karrablast", "escavalier", "foongus", "amoonguss", "frillish", "jellicent", "alomomola", "joltik", "galvantula", "ferroseed", "ferrothorn", "klink", "klang", "klinklang", "tynamo", "eelektrik", "eelektruzz", "axew", "fraxure", "haxorus", "cubchoo", "beartic", "cryogonal", "shelmet", "accelgor", "petilil", "lilligant", "basculin", "sandile", "krokorok", "krookodile", "darumaka", "darmanitan", "maractus", "dwebble", "crustle", "scraggy", "scrafty", "sigilyph", "yamask", "cofagrigus", "tirtouga", "carracosta", "archen", "archeops", "trubbish", "garbodor", "zorua", "zoroark", "minccino", "cinccino", "gothita", "gothorita", "gothitelle", "solosis", "duosion", "reuniclus", "ducklett", "swanna", "vanillite", "vanilluxe", "deerling", "sawsbuck", "emolga", "karrablast", "escavalier", "foongus", "amoonguss", "frillish", "jellicent", "alomomola", "joltik", "galvantula", "ferroseed", "ferrothorn", "klink", "klang", "klinklang", "tynamo", "eelektrik", "eelektruzz", "axew", "fraxure", "haxorus", "cubchoo", "beartic", "cryogonal", "shelmet", "accelgor", "petilil", "lilligant", "basculin", "sandile", "krokorok", "krookodile", "darumaka", "darmanitan", "maractus", "dwebble", "crustle", "scraggy", "scrafty", "sigilyph", "yamask", "cofagrigus", "tirtouga", "carracosta", "archen", "archeops", "trubbish", "garbodor", "zorua", "zoroark", "minccino", "cinccino", "gothita", "gothorita", "gothitelle", "solosis", "duosion", "reuniclus", "ducklett", "swanna", "vanillite", "vanilluxe", "deerling", "sawsbuck", "emolga", "karrablast", "escavalier", "foongus", "amoonguss", "frillish", "jellicent", "alomomola", "joltik", "galvantula", "ferroseed", "ferrothorn", "klink", "klang", "klinklang", "tynamo", "eelektrik"
+            // Add more Pokémon names as needed
+        ];
+
+        const inputField = document.getElementById('pokemon-name-input');
+        const autocompleteItems = document.getElementById('autocomplete-items');
+
+        function handleAutocomplete(event) {
+            const input = event.target.value.toLowerCase().trim();
+            autocompleteItems.innerHTML = '';
+
+            if (!input) {
+                autocompleteItems.style.display = 'none';
+                return;
+            }
+
+            const matches = pokemonNames.filter(name => name.includes(input));
+
+            if (matches.length === 1 && matches[0] === input) {
+                autocompleteItems.style.display = 'none';
+            } else {
+                autocompleteItems.style.display = 'block';
+                autocompleteItems.style.top = `${inputField.offsetTop + inputField.offsetHeight + 5}px`; // Position just below the input
+                autocompleteItems.style.left = `${inputField.offsetLeft - 10}px`; // Align with left edge of input with slight left shift
+                matches.forEach(name => {
+                    const item = document.createElement('div');
+                    item.textContent = name;
+                    item.classList.add('autocomplete-item');
+                    item.addEventListener('click', () => {
+                        inputField.value = name;
+                        autocompleteItems.style.display = 'none';
+                    });
+                    autocompleteItems.appendChild(item);
+                });
+            }
+        }
+
+        async function searchPokemon() {
+            const pokemonName = inputField.value.toLowerCase();
+            const response = await fetch(`/pokemon/${pokemonName}`);
+            const data = await response.json();
+
+            const pokemonDetails = document.getElementById('pokemon-details');
+            if (response.ok) {
+                pokemonDetails.style.display = 'flex';
+                document.getElementById('pokemon-name').textContent = data.name;
+                document.getElementById('pokemon-id').textContent = `ID: ${data.id}`;
+                document.getElementById('pokemon-height').textContent = `Height: ${data.height}`;
+                document.getElementById('pokemon-weight').textContent = `Weight: ${data.weight}`;
+                document.getElementById('pokemon-types').textContent = `Types: ${data.types}`;
+                document.getElementById('pokemon-description').textContent = `Description: ${data.description}`;
+                
+                // Update the Pokemon image
+                const pokemonImage = document.getElementById('pokemon-image');
+                pokemonImage.src = `http://img.pokemondb.net/sprites/black-white/anim/normal/${pokemonName}.gif`;
+                pokemonImage.alt = `${data.name} Image`;
+                pokemonImage.style.width = '300px'; /* Artificially enlarge image */
+                pokemonImage.style.height = '300px'; /* Artificially enlarge image */
+            } else {
+                pokemonDetails.style.display = 'none';
+                alert('Pokémon not found');
+            }
+        }
+
+        document.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+        });
+
+        // Disable F12 key and Ctrl+Shift+I combination
+        document.onkeydown = function(e) {
+            if (e.keyCode == 123 || (e.ctrlKey && e.shiftKey && e.keyCode == 73)) {
+                return false;
+            }
+        };
+    </script>
+</body>
+</html>

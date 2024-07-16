@@ -1,0 +1,28 @@
+{
+  "dependencies": {
+    "axios": "^1.7.2",
+    "express": "^4.19.2",
+    "mongoose": "^8.5.1",
+    "netlify-lambda": "^0.4.0",
+    "package": "^1.0.1",
+    "pokedex": "^1.1.0",
+    "pokedex-v2": "^1.0.6",
+    "serverless-http": "^3.2.0"
+  },
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "build": "netlify deploy --prod"
+  },
+  "name": "search-hub",
+  "version": "1.0.0",
+  "main": "index.js",
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "nodemon": "^3.1.4",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.5.3"
+  }
+}
